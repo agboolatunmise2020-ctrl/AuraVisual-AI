@@ -1,6 +1,6 @@
 services:
-  - type: web
-    name: aura-visual-ai
+  - type: worker
+    name: aura-visual-ai-worker
     runtime: python
     buildCommand: pip install -r requirements.txt
     startCommand: python bot.py
