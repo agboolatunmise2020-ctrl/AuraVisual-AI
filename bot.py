@@ -1,34 +1,42 @@
+import os
 import telebot
 from telebot import types
 
-# PASTE YOUR TOKEN DIRECTLY BETWEEN THE QUOTES BELOW
+# Use your token here directly to avoid the 'NoneType' error from earlier
 API_TOKEN = "8650108155:AAFCF52LC3NRDCfgYXjo3U8Lq6ZUeZGIi8Y" 
-AFFILIATE_LINK = "https://playfulcaphigh.com/?sub2=ustegram"
+OFFER_URL = "https://playfulcaphigh.com/?sub2=ustegram"
 
 bot = telebot.TeleBot(API_TOKEN)
 
 @bot.message_handler(commands=['start'])
-def welcome(message):
-    bot.reply_to(message, "📝 **URL Analyzer Active.**\nSend any link to check safety and bypass trackers.")
+def send_offer(message):
+    # Create a high-conversion button
+    markup = types.InlineKeyboardMarkup()
+    btn = types.InlineKeyboardButton("💰 Claim Your Free Reward Now", url=OFFER_URL)
+    markup.add(btn)
+
+    # Direct copy focused on the Freecash offer
+    text = (
+        "🔥 **Exclusive Offer Unlocked!**\n\n"
+        "You've been invited to join our premium rewards portal. "
+        "Complete simple tasks and start earning instantly.\n\n"
+        "👇 **Click the button below to start:**"
+    )
+    
+    bot.send_message(message.chat.id, text, reply_markup=markup, parse_mode='Markdown')
 
 @bot.message_handler(func=lambda message: True)
-def handle_url(message):
-    url = message.text
-    if url.startswith(('http://', 'https://')):
-        msg = bot.reply_to(message, "⌛ *Scanning...*", parse_mode='Markdown')
-        markup = types.InlineKeyboardMarkup()
-        btn_redirect = types.InlineKeyboardButton("🔓 Access Secure Link", url=AFFILIATE_LINK)
-        markup.add(btn_redirect)
-        response = (
-            "✅ **Link Analyzed**\n\n"
-            "**Safety Rating:** High\n"
-            "**Trackers:** Removed\n\n"
-            "Click below to access the destination through our secure proxy."
-        )
-        bot.edit_message_text(response, message.chat.id, msg.message_id, 
-                              reply_markup=markup, parse_mode='Markdown')
-    else:
-        bot.send_message(message.chat.id, "⚠️ Please send a valid URL.")
+def redirect_all(message):
+    # Redirect even if they type something else
+    markup = types.InlineKeyboardMarkup()
+    btn = types.InlineKeyboardButton("✅ Continue to Offer", url=OFFER_URL)
+    markup.add(btn)
+    
+    bot.send_message(
+        message.chat.id, 
+        "To proceed, please use the verified link below:", 
+        reply_markup=markup
+    )
 
 if __name__ == "__main__":
     bot.infinity_polling()
