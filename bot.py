@@ -7,9 +7,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 
 # 1. Setup & Config
-# It will look for the TELEGRAM_TOKEN you set in the Render Dashboard
 TOKEN = os.environ.get("TELEGRAM_TOKEN")
-AFFILIATE_LINK = "https://yourlinkhere.com" # Replace with your actual link
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -22,8 +20,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_sessions[user_id] = [] # Reset session
     
+    # Clean, compliant button layout
     keyboard = [
-        [InlineKeyboardButton("🚀 ACCESS EXCLUSIVE OFFER", url=AFFILIATE_LINK)],
         [InlineKeyboardButton("📄 Generate PDF", callback_data='convert')],
         [InlineKeyboardButton("🗑️ Clear Images", callback_data='clear')]
     ]
@@ -32,8 +30,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     welcome_text = (
         "<b>Welcome to AuraVisual PDF</b> 📄\n\n"
         "Convert your images into professional PDFs instantly.\n\n"
-        "💡 <b>Pro Tip:</b> Looking for the best systems to scale your profit? "
-        "Check out our recommended partner resources below!"
+        "1️⃣ Send me one or more photos.\n"
+        "2️⃣ Click <b>Generate PDF</b> when finished."
     )
     
     await update.message.reply_text(welcome_text, parse_mode='HTML', reply_markup=reply_markup)
@@ -67,7 +65,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 chat_id=user_id,
                 document=io.BytesIO(pdf_bytes),
                 filename="AuraVisual_Export.pdf",
-                caption="✨ PDF Ready! Check the exclusive offer above to scale your business."
+                caption="✨ Your PDF is ready!"
             )
             user_sessions[user_id] = [] 
             await status_msg.delete()
