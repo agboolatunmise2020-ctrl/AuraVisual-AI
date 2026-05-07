@@ -7,7 +7,10 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 
 # 1. Setup & Config
+# It will look for the TELEGRAM_TOKEN you set in the Render Dashboard
 TOKEN = os.environ.get("TELEGRAM_TOKEN")
+AFFILIATE_LINK = "https://yourlinkhere.com" # Replace with your actual link
+
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -20,32 +23,32 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_sessions[user_id] = [] # Reset session
     
     keyboard = [
+        [InlineKeyboardButton("🚀 ACCESS EXCLUSIVE OFFER", url=AFFILIATE_LINK)],
         [InlineKeyboardButton("📄 Generate PDF", callback_data='convert')],
         [InlineKeyboardButton("🗑️ Clear Images", callback_data='clear')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
-    await update.message.reply_text(
+    welcome_text = (
         "<b>Welcome to AuraVisual PDF</b> 📄\n\n"
-        "I can convert your images into a single PDF document.\n\n"
-        "1️⃣ Send me one or more photos.\n"
-        "2️⃣ Click <b>Generate PDF</b> when finished.",
-        parse_mode='HTML', reply_markup=reply_markup
+        "Convert your images into professional PDFs instantly.\n\n"
+        "💡 <b>Pro Tip:</b> Looking for the best systems to scale your profit? "
+        "Check out our recommended partner resources below!"
     )
+    
+    await update.message.reply_text(welcome_text, parse_mode='HTML', reply_markup=reply_markup)
 
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if user_id not in user_sessions:
         user_sessions[user_id] = []
     
-    # Download photo to memory
     photo_file = await update.message.photo[-1].get_file()
     image_bytes = await photo_file.download_as_bytearray()
-    
     user_sessions[user_id].append(bytes(image_bytes))
     
     count = len(user_sessions[user_id])
-    await update.message.reply_text(f"✅ Image {count} received. Send more or click 'Generate PDF' in the menu.")
+    await update.message.reply_text(f"✅ Image {count} received. Click 'Generate PDF' when ready.")
 
 async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -54,43 +57,37 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if query.data == 'convert':
         if user_id not in user_sessions or not user_sessions[user_id]:
-            await query.message.reply_text("❌ Please send some images first!")
+            await query.message.reply_text("❌ Please send photos first!")
             return
 
-        status_msg = await query.message.reply_text("⏳ Processing your PDF...")
-        
+        status_msg = await query.message.reply_text("⏳ Compiling your PDF...")
         try:
-            # Convert images to PDF using img2pdf
             pdf_bytes = img2pdf.convert(user_sessions[user_id])
-            
-            # Send PDF to user
             await context.bot.send_document(
                 chat_id=user_id,
                 document=io.BytesIO(pdf_bytes),
                 filename="AuraVisual_Export.pdf",
-                caption="✨ Your PDF is ready!"
+                caption="✨ PDF Ready! Check the exclusive offer above to scale your business."
             )
-            user_sessions[user_id] = [] # Clear session after success
+            user_sessions[user_id] = [] 
             await status_msg.delete()
-            
         except Exception as e:
             logger.error(f"PDF Error: {e}")
-            await status_msg.edit_text("❌ Failed to create PDF. Ensure images are valid.")
+            await status_msg.edit_text("❌ Error creating PDF.")
 
     elif query.data == 'clear':
         user_sessions[user_id] = []
-        await query.message.reply_text("🗑️ Image list cleared. You can start over.")
+        await query.message.reply_text("🗑️ Session cleared.")
 
 # 3. Main Execution
 if __name__ == '__main__':
     if not TOKEN:
-        logger.critical("Missing TELEGRAM_TOKEN environment variable!")
+        logger.critical("CRITICAL: Missing TELEGRAM_TOKEN environment variable!")
     else:
         app = ApplicationBuilder().token(TOKEN).build()
-        
         app.add_handler(CommandHandler("start", start))
         app.add_handler(CallbackQueryHandler(button_callback))
         app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
         
-        logger.info("PDF Bot is starting...")
+        logger.info("AuraVisual PDF Bot is starting...")
         app.run_polling(drop_pending_updates=True)
