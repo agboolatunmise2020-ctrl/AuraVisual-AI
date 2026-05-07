@@ -1,13 +1,10 @@
 services:
   - type: worker
-    name: aura-visual-ai-worker
+    name: AuraVisual-PDF-Bot
     runtime: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: python bot.py
+    # This line is the "magic" fix for your version errors
     envVars:
-      - key: TELEGRAM_TOKEN
-        sync: false
-      - key: STABILITY_KEY
-        sync: false
       - key: PYTHON_VERSION
-        value: 3.11.0  # <--- This locks it to a stable version
+        value: 3.11.10
+      - key: TELEGRAM_TOKEN
+        sync: false # Tells Render to look for the value in the Dashboard
